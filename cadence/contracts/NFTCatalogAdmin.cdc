@@ -8,6 +8,36 @@ import NFTCatalog from "./NFTCatalog.cdc"
 
 pub contract NFTCatalogAdmin {
 
+    // AddProposalAccepted
+    // Emitted when a proposal to add a new catalog item has been approved by an admin
+    pub event AddProposalAccepted(
+        proposer: Address,
+        collectionIdentifier : String,
+        contractName : String,
+        contractAddress : Address,
+        displayName : String
+    )
+
+    // UpdateProposalAccepted
+    // Emitted when a proposal to update a catalog item has been approved by an admin
+    pub event UpdateProposalAccepted(
+        proposer: Address,
+        collectionIdentifier : String,
+        contractName : String,
+        contractAddress : Address,
+        displayName : String
+    )
+
+    // ProposalRejected
+    // Emitted when a proposal to add or update a catalog item has been rejected.
+    pub event ProposalRejected(
+        proposer: Address,
+        collectionIdentifier : String,
+        contractName : String,
+        contractAddress : Address,
+        displayName : String
+    )
+
     pub let AdminPrivatePath: PrivatePath
     pub let AdminStoragePath: StoragePath
 
@@ -41,8 +71,22 @@ pub contract NFTCatalogAdmin {
 
             if NFTCatalog.getCatalogEntry(collectionIdentifier : NFTCatalog.getCatalogProposalEntry(proposalID : proposalID)!.collectionIdentifier) == nil {
                 NFTCatalog.addCatalogEntry(collectionIdentifier: newCatalogProposalEntry.collectionIdentifier, metadata : newCatalogProposalEntry.metadata)
+                emit AddProposalAccepted(
+                    proposer: newCatalogProposalEntry.proposer,
+                    collectionIdentifier : newCatalogProposalEntry.collectionIdentifier,
+                    contractName : newCatalogProposalEntry.metadata.contractName,
+                    contractAddress : newCatalogProposalEntry.metadata.contractAddress,
+                    displayName : newCatalogProposalEntry.metadata.collectionDisplay.name
+                )
             } else {
                 NFTCatalog.updateCatalogEntry(collectionIdentifier: newCatalogProposalEntry.collectionIdentifier, metadata: newCatalogProposalEntry.metadata)
+                emit UpdateProposalAccepted(
+                    proposer: newCatalogProposalEntry.proposer,
+                    collectionIdentifier : newCatalogProposalEntry.collectionIdentifier,
+                    contractName : newCatalogProposalEntry.metadata.contractName,
+                    contractAddress : newCatalogProposalEntry.metadata.contractAddress,
+                    displayName : newCatalogProposalEntry.metadata.collectionDisplay.name
+                )
             }
         }
 
@@ -54,6 +98,13 @@ pub contract NFTCatalogAdmin {
             let catalogProposalEntry = NFTCatalog.getCatalogProposalEntry(proposalID : proposalID)!
             let newCatalogProposalEntry = NFTCatalog.NFTCatalogProposal(collectionIdentifier : catalogProposalEntry.collectionIdentifier, metadata : catalogProposalEntry.metadata, message : catalogProposalEntry.message, status: "REJECTED", proposer: catalogProposalEntry.proposer)
             NFTCatalog.updateCatalogProposal(proposalID : proposalID, proposalMetadata : newCatalogProposalEntry)
+            emit ProposalRejected(
+                proposer: newCatalogProposalEntry.proposer,
+                collectionIdentifier : newCatalogProposalEntry.collectionIdentifier,
+                contractName : newCatalogProposalEntry.metadata.contractName,
+                contractAddress : newCatalogProposalEntry.metadata.contractAddress,
+                displayName : newCatalogProposalEntry.metadata.collectionDisplay.name
+            )
         }
 
         pub fun removeCatalogProposal(proposalID : UInt64) {
