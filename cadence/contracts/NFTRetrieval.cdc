@@ -24,6 +24,36 @@ pub contract NFTRetrieval {
         return []
     }
 
+    pub fun getNFTIDsFromCap(collectionIdentifier: String, collectionCap : Capability<&AnyResource{MetadataViews.ResolverCollection}>) : [UInt64] {
+        pre {
+            NFTCatalog.getCatalog()[collectionIdentifier] != nil : "Invalid collection identifier"
+        }
+        let catalog = NFTCatalog.getCatalog()
+        let value = catalog[collectionIdentifier]!
+
+        // Check if we have multiple collections for the NFT type...
+        let hasMultipleCollections = self.hasMultipleCollections(nftTypeIdentifier : value.nftType.identifier)
+
+        if collectionCap.check() {
+            let collectionRef = collectionCap.borrow()!
+            if !hasMultipleCollections {
+                return collectionRef.getIDs()
+            }
+            var ids : [UInt64] = []
+            
+            for id in collectionRef.getIDs() {
+                let nftResolver = collectionRef.borrowViewResolver(id: id)
+                let nftViews = MetadataViews.getNFTView(id: id, viewResolver: nftResolver)
+                if nftViews.display!.name == value.collectionDisplay.name {
+                    ids.append(id)
+                } 
+            }
+            return ids
+        }
+        
+        return []
+    }
+
     pub fun getNFTCountFromCap(collectionIdentifier: String, collectionCap : Capability<&AnyResource{MetadataViews.ResolverCollection}>) : UInt64 {
         pre {
             NFTCatalog.getCatalog()[collectionIdentifier] != nil : "Invalid collection identifier"

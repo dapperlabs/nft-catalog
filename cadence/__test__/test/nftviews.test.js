@@ -19,7 +19,15 @@ import {
     mintExampleNFT,
     getExampleNFTType
 } from '../src/examplenft';
-import { getAllNFTsInAccount, getNFTsInAccount, deployNFTRetrieval, getNFTInAccount, getNFTsInAccountFromPath, getNFTsCountInAccount } from '../src/nftviews';
+import {
+    getAllNFTsInAccount,
+    getNFTsInAccount,
+    deployNFTRetrieval,
+    getNFTInAccount,
+    getNFTsInAccountFromPath,
+    getNFTsCountInAccount,
+    getNFTIDsInAccount
+} from '../src/nftviews';
 import { TIMEOUT } from '../src/common';
 
 jest.setTimeout(TIMEOUT);
@@ -80,6 +88,11 @@ describe('NFT Retrieval Test Suite', () => {
 
         [result, error] = await shallResolve(getNFTsCountInAccount(Alice));
         expect(result['ExampleNFT']).toBe(1)
+        expect(error).toBe(null);
+
+        [result, error] = await shallResolve(getNFTIDsInAccount(Alice));
+        expect(result['ExampleNFT'].length).toBe(1)
+        expect(result['ExampleNFT'][0]).toBe(0)
         expect(error).toBe(null);
     });
 
